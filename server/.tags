@@ -1,0 +1,41 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BACKLOG	server.h	15;"	d
+CC	Makefile	/^CC=gcc$/;"	m
+MYPORT	server.h	14;"	d
+OBJS	Makefile	/^OBJS := $(patsubst %.c,%.o, $(SOURCES))$/;"	m
+SOURCES	Makefile	/^SOURCES = $(wildcard *.c)$/;"	m
+_CAMERA_H_	camera.h	2;"	d
+_CAMPTURESERVER_H_	camptureServer.h	2;"	d
+_SERVER_H_	server.h	2;"	d
+acceptThread	camptureServer.c	/^void *acceptThread(void *args)$/;"	f
+acceptThreadRtn	camptureServer.h	/^	void *acceptThreadRtn;$/;"	m	struct:globData
+camera_fd	camptureServer.h	/^	int camera_fd;$/;"	m	struct:globData
+camptureThread	camptureServer.c	/^void *camptureThread(void *args)$/;"	f
+camptureThreadRtn	camptureServer.h	/^	void *camptureThreadRtn;$/;"	m	struct:globData
+campture_cond	camptureServer.h	/^	pthread_cond_t campture_cond;$/;"	m	struct:globData
+campture_lock	camptureServer.h	/^	pthread_mutex_t campture_lock;$/;"	m	struct:globData
+captureInit	camera.c	/^int captureInit(struct globData *args)$/;"	f
+frameBuf	camptureServer.h	/^struct frameBuf{$/;"	s
+globData	camptureServer.h	/^struct globData{$/;"	s
+init_camer_device	camera.c	/^int init_camer_device(struct globData *args)$/;"	f
+init_mmap	camera.c	/^int init_mmap(struct globData *args)$/;"	f
+isRun	camptureServer.h	/^	int isRun;$/;"	m	struct:globData
+length	camptureServer.h	/^	int length;$/;"	m	struct:frameBuf
+main	camptureServer.c	/^int main(int args, char *argv[])$/;"	f
+n_buffer	camptureServer.h	/^	int n_buffer;$/;"	m	struct:globData
+open_camer_device	camera.c	/^int open_camer_device()$/;"	f
+read_frame	camera.c	/^int read_frame(struct globData *args)$/;"	f
+serverInit	server.c	/^int serverInit( int myPort )$/;"	f
+sock_fd	camptureServer.h	/^	int sock_fd;$/;"	m	struct:globData
+start	camptureServer.h	/^	void *start;$/;"	m	struct:frameBuf
+start_capturing	camera.c	/^int start_capturing(struct globData *args)$/;"	f
+stop_capturing	camera.c	/^void stop_capturing(struct globData *args)$/;"	f
+threadAccept	camptureServer.h	/^	pthread_t threadAccept;$/;"	m	struct:globData
+threadCampture	camptureServer.h	/^	pthread_t threadCampture;$/;"	m	struct:globData
+tmpBuf	camptureServer.h	/^	struct frameBuf *tmpBuf;$/;"	m	struct:globData	typeref:struct:globData::frameBuf
+userBuf	camptureServer.h	/^	struct frameBuf *userBuf;$/;"	m	struct:globData	typeref:struct:globData::frameBuf

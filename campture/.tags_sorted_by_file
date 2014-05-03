@@ -1,0 +1,35 @@
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+BUFTYPE	camera.c	/^}BUFTYPE;$/;"	t	typeref:struct:__anon1	file:
+close_camer_device	camera.c	/^void close_camer_device(int fd)$/;"	f
+init_camer_device	camera.c	/^int init_camer_device(int fd)$/;"	f
+init_mmap	camera.c	/^int init_mmap(int fd)$/;"	f
+length	camera.c	/^	int length;$/;"	m	struct:__anon1	file:
+main	camera.c	/^int main()$/;"	f
+mainloop	camera.c	/^int mainloop(int fd)$/;"	f
+n_buffer	camera.c	/^int n_buffer = 0;$/;"	v
+open_camer_device	camera.c	/^int open_camer_device()$/;"	f
+process_image	camera.c	/^int process_image(void *addr,int length)$/;"	f
+read_frame	camera.c	/^int read_frame(int fd)$/;"	f
+start	camera.c	/^	void *start;$/;"	m	struct:__anon1	file:
+start_capturing	camera.c	/^int start_capturing(int fd)$/;"	f
+stop_capturing	camera.c	/^void stop_capturing(int fd)$/;"	f
+uninit_camer_device	camera.c	/^void uninit_camer_device()$/;"	f
+user_buf	camera.c	/^BUFTYPE *user_buf;$/;"	v
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+CLEAR	picture.c	32;"	d	file:
+buffer	picture.c	/^struct buffer {$/;"	s	file:
+buffers	picture.c	/^struct buffer * buffers = NULL;$/;"	v	typeref:struct:buffer
+dev_name	picture.c	/^static char * dev_name = "\/dev\/video0";\/\/摄像头设备名$/;"	v	file:
+fd	picture.c	/^static int fd = -1;$/;"	v	file:
+file_fd	picture.c	/^FILE *file_fd;$/;"	v
+file_length	picture.c	/^static unsigned long file_length;$/;"	v	file:
+file_name	picture.c	/^static unsigned char *file_name;$/;"	v	file:
+length	picture.c	/^size_t length;$/;"	m	struct:buffer	file:
+main	picture.c	/^int main (int argc,char ** argv)$/;"	f
+n_buffers	picture.c	/^static unsigned int n_buffers = 0;$/;"	v	file:
+read_frame	picture.c	/^static int read_frame (void)$/;"	f	file:
+start	picture.c	/^void * start;$/;"	m	struct:buffer	file:
