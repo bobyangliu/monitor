@@ -6,48 +6,145 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>547</width>
+    <height>400</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QTextEdit" name="Receive">
+   <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>33</x>
-      <y>173</y>
-      <width>231</width>
-      <height>101</height>
+      <x>20</x>
+      <y>310</y>
+      <width>469</width>
+      <height>29</height>
      </rect>
     </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLineEdit" name="address">
+       <property name="text">
+        <string>127.0.0.1</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="connect">
+       <property name="text">
+        <string>connect</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="unconnect">
+       <property name="text">
+        <string>unconnect</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
-   <widget class="QPushButton" name="connectButton">
+   <widget class="QLabel" name="picture">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
-      <x>290</x>
-      <y>170</y>
-      <width>87</width>
+      <x>30</x>
+      <y>50</y>
+      <width>320</width>
+      <height>240</height>
+     </rect>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="text">
+     <string>   Monitot Area</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="disName">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>10</y>
+      <width>101</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>OpenSymbol</family>
+      <pointsize>12</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>monitor_car</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="goButton">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>100</y>
+      <width>71</width>
       <height>27</height>
      </rect>
     </property>
     <property name="text">
-     <string>Connect</string>
+     <string>Go</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="stopButton">
+   <widget class="QPushButton" name="LeftButton">
     <property name="geometry">
      <rect>
-      <x>290</x>
-      <y>210</y>
-      <width>87</width>
+      <x>370</x>
+      <y>150</y>
+      <width>71</width>
       <height>27</height>
      </rect>
     </property>
     <property name="text">
-     <string>Stop</string>
+     <string>Left</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="RightButton">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>150</y>
+      <width>71</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Right</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="BackButton">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>200</y>
+      <width>71</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Back</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="lcdNumber">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>50</y>
+      <width>64</width>
+      <height>23</height>
+     </rect>
     </property>
    </widget>
   </widget>
@@ -56,7 +153,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>400</width>
+     <width>547</width>
      <height>25</height>
     </rect>
    </property>

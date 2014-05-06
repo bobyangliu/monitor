@@ -10,10 +10,10 @@
 //	{
 //		if(!read_frame(data))
 //		{
-//			pthread_mutex_lock(&(data->campture_lock));
+//			pthread_mutex_lock(&(data->capture_lock));
 //			memcpy(data->sendBuf->start, data->tmpBuf->start, data->tmpBuf->length);
-//			pthread_cond_signal(&(data->campture_cond));
-//			pthread_mutex_unlock(&(data->campture_lock));
+//			pthread_cond_signal(&(data->capture_cond));
+//			pthread_mutex_unlock(&(data->capture_lock));
 //			break;
 //		}
 //	}
@@ -55,20 +55,20 @@
  			if(0 == r)
  			{
  				fprintf(stderr,"select Timeout\n");
- 				pthread_mutex_lock(&(data->campture_lock));
- 				pthread_cond_signal(&(data->campture_cond));
- 				pthread_mutex_unlock(&(data->campture_lock));
+ 				pthread_mutex_lock(&(data->capture_lock));
+ 				pthread_cond_signal(&(data->capture_cond));
+ 				pthread_mutex_unlock(&(data->capture_lock));
  				return NULL;
  			}
 
  			if(!read_frame(data))
  			{
- 				printf("start to copy the frame data to send buffer!\n");
- 				pthread_mutex_lock(&(data->campture_lock));
+ 				//printf("start to copy the frame data to send buffer!\n");
+ 				pthread_mutex_lock(&(data->capture_lock));
  				memcpy(data->sendBuf->start, data->tmpBuf->start, data->tmpBuf->length);
- 				pthread_cond_signal(&(data->campture_cond));
- 				pthread_mutex_unlock(&(data->campture_lock));
- 				printf("copy frame data is complete!\n");
+ 				pthread_cond_signal(&(data->capture_cond));
+ 				pthread_mutex_unlock(&(data->capture_lock));
+ 				//printf("copy frame data is complete!\n");
  				break;
  			}
 
@@ -80,8 +80,8 @@
 //{
 //	globData *glob = (globData *)args;
 //	/* 这里是 thread */
-//	pthread_mutex_lock(&glob->campture_lock);
-//	pthread_cond_wait(&glob->campture_cond, &glob->campture_lock);
+//	pthread_mutex_lock(&glob->capture_lock);
+//	pthread_cond_wait(&glob->capture_cond, &glob->capture_lock);
 //
 //	if (send(*(int *)new_fd, tmpbuf->start, tmpbuf->length, 0) == -1)
 //	{
@@ -90,7 +90,7 @@
 //		exit(0);
 //	}
 //
-//	pthread_mutex_unlock(&campture_lock);
+//	pthread_mutex_unlock(&capture_lock);
 //
 //	close(*(int *)new_fd);/* 关闭 new_fd 代表的这个套接字连接 */
 //
@@ -102,6 +102,7 @@ void *acceptThread(void *args)
 {
 	int sin_size;
 	int new_fd;
+	int send_size;
 	struct sockaddr_in their_addr;/* 连接者的地址信息*/
 	pthread_t threadChild;//同时发起几个链接时有问题
 	void *childThreadRtn;
@@ -109,28 +110,36 @@ void *acceptThread(void *args)
 
 	sin_size = sizeof(struct sockaddr_in);
 
+	if ((new_fd = accept(glob->sock_fd, (struct sockaddr *)&their_addr, &sin_size)) == -1)
+	{
+		perror("accept");/* 如果调用 accept()出现错误,则给出错误提示,进入下一个循环 */
+	}
+	close(glob->sock_fd);
+	printf("server: got connection from %s\n", inet_ntoa(their_addr.sin_addr));/* 服务器给出出现连接的信息 */
+
 	while(1)
 	{
-		/* 这里是主 accept()循环 */
-		if ((new_fd = accept(glob->sock_fd, (struct sockaddr *)&their_addr, &sin_size)) == -1)
+		printf("send frame size : %d \n", glob->sendBuf->length);
+//		pthread_create(&threadChild, NULL, childThread, (void *)&new_fd);
+		pthread_mutex_lock(&glob->capture_lock);
+		pthread_cond_wait(&glob->capture_cond, &glob->capture_lock);
+		printf("start send the buf data!\n");
+		if ((send_size = send(new_fd, glob->sendBuf->start, glob->sendBuf->length, 0)) == -1)
 		{
-			perror("accept");/* 如果调用 accept()出现错误,则给出错误提示,进入下一个循环 */
+			perror("send");/* 如果错误,则给出错误提示,然后关闭这个新连接,退出 */
+			pthread_mutex_unlock(&glob->capture_lock);
+			break;
+		}
+		printf("send size: %d\n", send_size);
+		pthread_mutex_unlock(&glob->capture_lock);
+		usleep(50);
+		if (4 == recv(new_fd, glob->control, 4, 0))
+		{
+			printf("recv: %s", glob->control);
+
 			continue;
 		}
 
-		printf("server: got connection from %s\n", inet_ntoa(their_addr.sin_addr));/* 服务器给出出现连接的信息 */
-		printf("send frame size : %d \n", glob->sendBuf->length);
-//		pthread_create(&threadChild, NULL, childThread, (void *)&new_fd);
-		pthread_mutex_lock(&glob->campture_lock);
-		pthread_cond_wait(&glob->campture_cond, &glob->campture_lock);
-		printf("start send the buf data!\n");
-		if (send(new_fd, glob->sendBuf->start, glob->sendBuf->length, 0) == -1)
-		{
-			perror("send");/* 如果错误,则给出错误提示,然后关闭这个新连接,退出 */
-			close(new_fd);
-			pthread_exit(0);
-		}
-		pthread_mutex_unlock(&glob->campture_lock);
 		break;
 	}
 	glob->isRun = 0;
@@ -148,28 +157,31 @@ int main(int args, char *argv[])
 	globargs.isRun = 1;
 	globargs.sock_fd = serverInit(MYPORT);
 
-	pthread_mutex_init(&(globargs.campture_lock), NULL);
-	pthread_cond_init(&(globargs.campture_cond), NULL);
+	pthread_mutex_init(&(globargs.capture_lock), NULL);
+	pthread_cond_init(&(globargs.capture_cond), NULL);
 
 	pthread_create(&globargs.threadAccept, NULL, acceptThread, (void *)&globargs);
-	pthread_create(&globargs.threadCampture, NULL, camptureThread, (void *)&globargs);
+	pthread_create(&globargs.threadCapture, NULL, camptureThread, (void *)&globargs);
 	
 	if(pthread_join(globargs.threadAccept, &globargs.acceptThreadRtn))
 	{
+		close(globargs.sock_fd);
 		printf("accept thread quit return 1\n");
 	}
 	else
 	{
+		close(globargs.sock_fd);
 		printf("accept thread quit return 0\n");
 	}
 
-	if(pthread_join(globargs.threadCampture, &globargs.camptureThreadRtn))
+	if(pthread_join(globargs.threadCapture, &globargs.camptureThreadRtn))
 	{
-		printf("accept thread quit return 1\n");
+		printf("Capture thread quit return 1\n");
 	}
 	else
 	{
-		printf("accept thread quit return 0\n");
+
+		printf("Capture thread quit return 0\n");
 	}
 
 	stop_capturing(&globargs);
