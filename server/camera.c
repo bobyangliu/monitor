@@ -135,8 +135,8 @@ int init_camer_device(struct globData *args)
 	//设置摄像头采集数据格式，如设置采集数据的
 	//长,宽，图像格式(JPEG,YUYV,MJPEG等格式)
 	stream_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	stream_fmt.fmt.pix.width = 320;
-	stream_fmt.fmt.pix.height = 240;
+	stream_fmt.fmt.pix.width = 680;
+	stream_fmt.fmt.pix.height = 480;
 	stream_fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
 	stream_fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
 
@@ -206,11 +206,11 @@ int start_capturing(struct globData *args)
 //		exit(EXIT_FAILURE);
 //	}
 //
-//	pthread_mutex_lock(&capture_lock);
-//	pthread_cond_wait(&capture_cond, &capture_lock);
+//	pthread_mutex_lock(&campture_lock);
+//	pthread_cond_wait(&campture_cond, &campture_lock);
 //	fwrite(addr,length,1,fp);
 //	//usleep(500);
-//	pthread_mutex_unlock(&capture_lock);
+//	pthread_mutex_unlock(&campture_lock);
 //
 //	fclose(fp);
 //

@@ -21,7 +21,7 @@ int open_camer_device();
 int init_mmap(struct globData *args);
 int init_camer_device(struct globData *args);
 int start_capturing(struct globData *args);
-
+//void *process_image(void *);
 int read_frame(struct globData *args);
 //void *camptureThread(void *);
 void stop_capturing(struct globData *args);
