@@ -12,7 +12,18 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->connect, SIGNAL(clicked()), this, SLOT(connectServer()));
     connect(ui->unconnect, SIGNAL(clicked()), this, SLOT(unconnect()));
 
+    connect(ui->goButton, SIGNAL(pressed()), this, SLOT(controlSet()));
+    connect(ui->RightButton, SIGNAL(pressed()), this, SLOT(controlSet()));
+    connect(ui->LeftButton, SIGNAL(pressed()), this, SLOT(controlSet()));
+    connect(ui->BackButton, SIGNAL(pressed()), this, SLOT(controlSet()));
+
+    connect(ui->goButton, SIGNAL(released()), this, SLOT(controlClean()));
+    connect(ui->RightButton, SIGNAL(released()), this, SLOT(controlClean()));
+    connect(ui->LeftButton, SIGNAL(released()), this, SLOT(controlClean()));
+    connect(ui->BackButton, SIGNAL(released()), this, SLOT(controlClean()));
+
     img = new QImage();
+
     if(! ( img->load("/home/liu/桌面/monitor/client/welcome.png") ) ) //加载图像
     {
         QMessageBox::information(this,
@@ -21,10 +32,36 @@ MainWindow::MainWindow(QWidget *parent) :
         ::exit(1);
     }
     ui->picture->setPixmap(QPixmap::fromImage(*img));
-    isRuning = true;
-    memset(control, 0, 4);
+    isRuning = false;
+
+    memset(&control, 0, 4);
 }
 
+void MainWindow::timerEvent(QTimerEvent *e)
+{
+    if(isRuning == false)
+    {
+        return;
+    }
+    count = 0;
+    ::recv(sock_fd, &recvData, sizeof(struct SendDataHead), 0);
+    over = recvData.length;
+    while(over)
+    {
+        if((numbytes = ::recv(sock_fd, buf, over, 0)) == -1)
+        {
+            perror("recv");/* 如果接收数据错误,则显示错误信息并退出 */
+            exit(1);
+        }
+        memcpy(&(picture[count]), buf, numbytes);
+        count += numbytes;
+        over    -= numbytes;
+        memset(buf, 0, sizeof(buf));
+    }
+    emit recvReady();
+    ::send(sock_fd, &control, sizeof(struct RecvDataHead), 0);
+    memset(picture, 0, sizeof(picture));
+}
 
 void MainWindow::connectServer()
 {
@@ -33,6 +70,10 @@ void MainWindow::connectServer()
 //                             tmp.data(),
 //                             tmp.data());
 //    return;
+    if(isRuning == true)
+    {
+        return;
+    }
     if ((he=gethostbyname("127.0.0.1")) == NULL)/* 取得主机信息 */
     {
         /* 如果 gethostbyname()发生错误,则显示错误信息并退出 */
@@ -57,36 +98,8 @@ void MainWindow::connectServer()
             exit(1);
         }
 
-        over = 1;
-        count = 0;
-
-        while(isRuning)
-        {
-            while(over)
-            {
-                if((numbytes = recv(sock_fd, buf, MAXDATASIZE, 0)) == -1)
-                {
-                    perror("recv");/* 如果接收数据错误,则显示错误信息并退出 */
-                    exit(1);
-                }
-                if (numbytes < MAXDATASIZE)
-                {
-                    over = 0;/* code */
-                }
-
-                memcpy(&(picture[count]), buf, numbytes);
-                count += numbytes;
-                memset(buf, 0, sizeof(buf));
-            }
-            emit recvReady();
-            ::send(sock_fd, control, 4, 0);
-            memset(picture, 0, sizeof(picture));
-//            ::sleep(1);
-            over = 1;
-            count = 0;
-        }
-
-        return;
+        startTimer(100);
+        isRuning = true;
 }
 
 void MainWindow::unconnect()
@@ -114,16 +127,51 @@ int MainWindow::displayPicture()
            return 1;
        }
 
-       ui->picture->repaint();
+
        ui->picture->setPixmap(QPixmap::fromImage(*img));
+       ui->picture->update();
 
 //       QMessageBox::information(this,
 //                                tr("display!"),
 //                                tr("display ok!"));
 //        ::usleep(200);
-
-       usleep(100);
        return 0;
+}
+
+void MainWindow::controlSet()
+{
+    QPushButton *tmp = dynamic_cast<QPushButton *>(sender());
+    if("go" == tmp->whatsThis())
+    {
+        control.length |= 0x01;
+    }else if("left" == tmp->whatsThis())
+    {
+        control.length |= 0x02;
+    }else if("right" == tmp->whatsThis())
+    {
+        control.length |= 0x04;
+    }else if("back" == tmp->whatsThis())
+    {
+        control.length |= 0x08;
+    }
+}
+
+void MainWindow::controlClean()
+{
+    QPushButton *tmp = dynamic_cast<QPushButton *>(sender());
+    if("go" == tmp->whatsThis())
+    {
+        control.length &= ~0x01;
+    }else if("left" == tmp->whatsThis())
+    {
+        control.length &= ~0x02;
+    }else if("right" == tmp->whatsThis())
+    {
+        control.length &= ~0x04;
+    }else if("back" == tmp->whatsThis())
+    {
+        control.length &= ~0x08;
+    }
 }
 
 MainWindow::~MainWindow()

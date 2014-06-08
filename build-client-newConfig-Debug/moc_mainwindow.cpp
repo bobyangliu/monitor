@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'mainwindow.h'
 **
-** Created: Tue May 6 16:45:06 2014
+** Created: Mon Jun 9 00:10:14 2014
 **      by: The Qt Meta Object Compiler version 63 (Qt 4.8.4)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,7 +23,7 @@ static const uint qt_meta_data_MainWindow[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-       4,   14, // methods
+       6,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -37,6 +37,8 @@ static const uint qt_meta_data_MainWindow[] = {
       24,   11,   11,   11, 0x0a,
       44,   11,   40,   11, 0x0a,
       61,   11,   11,   11, 0x0a,
+      73,   11,   11,   11, 0x0a,
+      86,   11,   11,   11, 0x0a,
 
        0        // eod
 };
@@ -44,6 +46,7 @@ static const uint qt_meta_data_MainWindow[] = {
 static const char qt_meta_stringdata_MainWindow[] = {
     "MainWindow\0\0recvReady()\0connectServer()\0"
     "int\0displayPicture()\0unconnect()\0"
+    "controlSet()\0controlClean()\0"
 };
 
 void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -57,6 +60,8 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 2: { int _r = _t->displayPicture();
             if (_a[0]) *reinterpret_cast< int*>(_a[0]) = _r; }  break;
         case 3: _t->unconnect(); break;
+        case 4: _t->controlSet(); break;
+        case 5: _t->controlClean(); break;
         default: ;
         }
     }
@@ -94,9 +99,9 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 4)
+        if (_id < 6)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 4;
+        _id -= 6;
     }
     return _id;
 }

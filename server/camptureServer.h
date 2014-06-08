@@ -4,8 +4,12 @@
 #define CONTROL_ARRAY_SIZE 4
 
 struct frameBuf{
-	void *start;
+	unsigned char *start;
 	int length;
+};
+
+struct RecvDataHead{
+	int control;
 };
 
 struct globData{
@@ -27,7 +31,7 @@ struct globData{
 
 	int n_buffer;
 	int isRun;
-	char control[CONTROL_ARRAY_SIZE];
+	struct RecvDataHead control;
 };
 
 

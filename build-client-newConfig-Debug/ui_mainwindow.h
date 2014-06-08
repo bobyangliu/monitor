@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created: Tue May 6 14:07:58 2014
+** Created: Mon Jun 9 00:19:55 2014
 **      by: Qt User Interface Compiler version 4.8.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -16,7 +16,6 @@
 #include <QtGui/QButtonGroup>
 #include <QtGui/QHBoxLayout>
 #include <QtGui/QHeaderView>
-#include <QtGui/QLCDNumber>
 #include <QtGui/QLabel>
 #include <QtGui/QLineEdit>
 #include <QtGui/QMainWindow>
@@ -43,7 +42,6 @@ public:
     QPushButton *LeftButton;
     QPushButton *RightButton;
     QPushButton *BackButton;
-    QLCDNumber *lcdNumber;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -102,9 +100,6 @@ public:
         BackButton = new QPushButton(centralWidget);
         BackButton->setObjectName(QString::fromUtf8("BackButton"));
         BackButton->setGeometry(QRect(420, 200, 71, 27));
-        lcdNumber = new QLCDNumber(centralWidget);
-        lcdNumber->setObjectName(QString::fromUtf8("lcdNumber"));
-        lcdNumber->setGeometry(QRect(370, 50, 64, 23));
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
@@ -130,9 +125,21 @@ public:
         unconnect->setText(QApplication::translate("MainWindow", "unconnect", 0, QApplication::UnicodeUTF8));
         picture->setText(QApplication::translate("MainWindow", "   Monitot Area", 0, QApplication::UnicodeUTF8));
         disName->setText(QApplication::translate("MainWindow", "monitor_car", 0, QApplication::UnicodeUTF8));
+#ifndef QT_NO_WHATSTHIS
+        goButton->setWhatsThis(QApplication::translate("MainWindow", "go", 0, QApplication::UnicodeUTF8));
+#endif // QT_NO_WHATSTHIS
         goButton->setText(QApplication::translate("MainWindow", "Go", 0, QApplication::UnicodeUTF8));
+#ifndef QT_NO_WHATSTHIS
+        LeftButton->setWhatsThis(QApplication::translate("MainWindow", "left", 0, QApplication::UnicodeUTF8));
+#endif // QT_NO_WHATSTHIS
         LeftButton->setText(QApplication::translate("MainWindow", "Left", 0, QApplication::UnicodeUTF8));
+#ifndef QT_NO_WHATSTHIS
+        RightButton->setWhatsThis(QApplication::translate("MainWindow", "right", 0, QApplication::UnicodeUTF8));
+#endif // QT_NO_WHATSTHIS
         RightButton->setText(QApplication::translate("MainWindow", "Right", 0, QApplication::UnicodeUTF8));
+#ifndef QT_NO_WHATSTHIS
+        BackButton->setWhatsThis(QApplication::translate("MainWindow", "back", 0, QApplication::UnicodeUTF8));
+#endif // QT_NO_WHATSTHIS
         BackButton->setText(QApplication::translate("MainWindow", "Back", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 

@@ -20,7 +20,17 @@
 //
 //	pthread_exit(0);//return 0;
 //}
- void *camptureThread(void *args)
+int sendData(int sock_fd,unsigned char *buf, int length)
+{
+	struct SendDataHead head;
+
+	head.length = length;
+
+	send(sock_fd, &head, sizeof(struct SendDataHead), 0);
+	return send(sock_fd, buf, length, 0);
+}
+
+void *camptureThread(void *args)
  {
  	struct globData *data = (struct globData *)args;
  	int count = 1;
@@ -119,23 +129,37 @@ void *acceptThread(void *args)
 
 	while(1)
 	{
-		printf("send frame size : %d \n", glob->sendBuf->length);
+		//printf("send frame size : %d \n", glob->sendBuf->length);
 //		pthread_create(&threadChild, NULL, childThread, (void *)&new_fd);
 		pthread_mutex_lock(&glob->capture_lock);
 		pthread_cond_wait(&glob->capture_cond, &glob->capture_lock);
-		printf("start send the buf data!\n");
-		if ((send_size = send(new_fd, glob->sendBuf->start, glob->sendBuf->length, 0)) == -1)
+		//printf("start send the buf data!\n");
+		if ((send_size = sendData(new_fd, glob->sendBuf->start, glob->sendBuf->length)) == -1)
 		{
 			perror("send");/* 如果错误,则给出错误提示,然后关闭这个新连接,退出 */
 			pthread_mutex_unlock(&glob->capture_lock);
 			break;
 		}
-		printf("send size: %d\n", send_size);
+		//printf("send size: %d\n", send_size);
+		usleep(80);
 		pthread_mutex_unlock(&glob->capture_lock);
-		usleep(50);
-		if (4 == recv(new_fd, glob->control, 4, 0))
+		if (sizeof(struct RecvDataHead) ==
+				recv(new_fd, &(glob->control), sizeof(struct RecvDataHead), 0))
 		{
-			printf("recv: %s", glob->control);
+			//printf("recv: %d\n", glob->control.control);
+			if(glob->control.control & 0x1)
+			{
+				printf("前进\n");
+			}else if(glob->control.control & 0x2)
+			{
+				printf("左转\n");
+			}else if(glob->control.control & 0x4)
+			{
+				printf("右转\n");
+			}else if(glob->control.control & 0x8)
+			{
+				printf("后退\n");
+			}
 
 			continue;
 		}

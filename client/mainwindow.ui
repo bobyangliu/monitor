@@ -94,6 +94,9 @@
       <height>27</height>
      </rect>
     </property>
+    <property name="whatsThis">
+     <string>go</string>
+    </property>
     <property name="text">
      <string>Go</string>
     </property>
@@ -106,6 +109,9 @@
       <width>71</width>
       <height>27</height>
      </rect>
+    </property>
+    <property name="whatsThis">
+     <string>left</string>
     </property>
     <property name="text">
      <string>Left</string>
@@ -120,6 +126,9 @@
       <height>27</height>
      </rect>
     </property>
+    <property name="whatsThis">
+     <string>right</string>
+    </property>
     <property name="text">
      <string>Right</string>
     </property>
@@ -133,18 +142,11 @@
       <height>27</height>
      </rect>
     </property>
+    <property name="whatsThis">
+     <string>back</string>
+    </property>
     <property name="text">
      <string>Back</string>
-    </property>
-   </widget>
-   <widget class="QLCDNumber" name="lcdNumber">
-    <property name="geometry">
-     <rect>
-      <x>370</x>
-      <y>50</y>
-      <width>64</width>
-      <height>23</height>
-     </rect>
     </property>
    </widget>
   </widget>

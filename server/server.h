@@ -14,6 +14,9 @@
 #define MYPORT 4000/* 服务器要监听的本地端口 */
 #define BACKLOG 10/* 能够同时接受多少没有 accept 的连接 */
 
-int serverInit(int myPort);
+struct SendDataHead{
+	int length;
+};
 
+int serverInit(int myPort);
 #endif

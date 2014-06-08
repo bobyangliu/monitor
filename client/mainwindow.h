@@ -35,6 +35,8 @@ public slots:
     void connectServer();
     int displayPicture();
     void unconnect();
+    void controlSet();
+    void controlClean();
 
 signals:
     void recvReady();
@@ -42,15 +44,24 @@ signals:
 private:
     Ui::MainWindow *ui;
     QImage *img;
-    QTime time;
 
     bool isRuning;
     int sock_fd, numbytes, over, count;/* 套接字描述符 */
     uchar buf[MAXDATASIZE];
     uchar picture[184320];
-    char control[4];
 	struct hostent *he;
 	struct sockaddr_in their_addr;/* 连接者的主机信息 */
+
+    struct SendDataHead{
+        int length;
+    }recvData;
+
+    struct RecvDataHead{
+        int length;
+    }control;
+
+protected:
+    void timerEvent(QTimerEvent *);
 
 };
 
