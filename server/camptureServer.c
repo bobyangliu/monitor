@@ -189,12 +189,12 @@ int main(int args, char *argv[])
 	
 	if(pthread_join(globargs.threadAccept, &globargs.acceptThreadRtn))
 	{
-		close(globargs.sock_fd);
+		//close(globargs.sock_fd);
 		printf("accept thread quit return 1\n");
 	}
 	else
 	{
-		close(globargs.sock_fd);
+		//close(globargs.sock_fd);
 		printf("accept thread quit return 0\n");
 	}
 

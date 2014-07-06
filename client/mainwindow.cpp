@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(recvReady()), this, SLOT(displayPicture()));
     connect(ui->connect, SIGNAL(clicked()), this, SLOT(connectServer()));
     connect(ui->unconnect, SIGNAL(clicked()), this, SLOT(unconnect()));
+    connect(ui->quitBtn, SIGNAL(clicked()), this, SLOT(close()));
 
     connect(ui->goButton, SIGNAL(pressed()), this, SLOT(controlSet()));
     connect(ui->RightButton, SIGNAL(pressed()), this, SLOT(controlSet()));
@@ -35,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
     isRuning = false;
 
     memset(&control, 0, 4);
+    InitScale();
 }
 
 void MainWindow::timerEvent(QTimerEvent *e)
@@ -116,9 +118,18 @@ void MainWindow::unconnect()
     ::close(sock_fd);
 }
 
+void MainWindow::ConvertToRgb()
+{
+    ::memcpy(src_data[0], picture, recvData.length);
+    sws_scale(sws_ctx, (const uint8_t * const*)src_data,
+                      src_linesize, 0, src_h, dst_data, dst_linesize);
+    ::memcpy(picture, "P6\n320 240\n255\n", sizeof("P6\n320 240\n255\n"));
+    ::memcpy(picture+sizeof("P6\n320 240\n255\n"), dst_data[0], 320*240*3);
+}
 
 int MainWindow::displayPicture()
 {
+       ConvertToRgb();
        if(! ( img->loadFromData(picture, sizeof(picture)) ) ) //加载图像
        {
 //           QMessageBox::information(this,
@@ -174,10 +185,37 @@ void MainWindow::controlClean()
     }
 }
 
+void MainWindow::InitScale()
+{
+    //pictureHead = "P6\n320 240\n255\n";
+    src_w = 320;
+    src_h = 240;
+    dst_w = 320;
+    dst_h = 240;
+    sws_ctx = sws_getContext(src_w, src_h, AV_PIX_FMT_YUYV422,
+                                 dst_w, dst_h, AV_PIX_FMT_RGB24,
+                                 SWS_BILINEAR, NULL, NULL, NULL);
+    if(!sws_ctx)
+    {
+        printf("get sws_context failed!\n");
+    }
+    if(av_image_alloc(src_data, src_linesize, src_w, src_h, AV_PIX_FMT_YUYV422, 1) < 0)
+    {
+        printf("alloc src_data failed!\n");
+    }
+    if(av_image_alloc(dst_data, dst_linesize, dst_w, dst_h, AV_PIX_FMT_RGB24, 1) < 0)
+    {
+        printf("alloc dst_data failed!\n");
+    }
+}
+
 MainWindow::~MainWindow()
 {
     delete ui;
     delete img;
+    av_freep(&src_data[0]);
+    av_freep(&dst_data[0]);
+    sws_freeContext(sws_ctx);
 }
 
 

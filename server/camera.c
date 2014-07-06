@@ -137,7 +137,7 @@ int init_camer_device(struct globData *args)
 	stream_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	stream_fmt.fmt.pix.width = 320;
 	stream_fmt.fmt.pix.height = 240;
-	stream_fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
+	stream_fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
 	stream_fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
 
 	if(-1 == ioctl(args->camera_fd,VIDIOC_S_FMT,&stream_fmt))

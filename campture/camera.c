@@ -1,19 +1,49 @@
 #include "camera.h"
+#include "libavcodec\avcodec.h"
+#include "libavformat\avformat.h"
+#include "libswscale\swscale.h"
+
+frameBuf *user_buf, *tmpbuf;
+struct encoderStruct{
+	AVFormatContext* pFormatCtx;
+	AVOutputFormat* fmt;
+	AVStream* video_st;
+	AVCodecContext* pCodecCtx;
+	AVCodec* pCodec;
+	AVFrame* picture;
+	struct SwsContext* sws_ctx;
+};
 
 
-extern BUFTYPE *user_buf, *tmpbuf;
 
+void saveData(char *fileName, unsigned char *data, int size)
+{
+	FILE *pFile;
+
+	pFile = fopen(fileName, "wb");
+	if(!pFile)
+	{
+		print("file open failed!");
+		exit(1);
+	}
+	fwrite(data, 1, size, pFile);
+
+	if(pFile)
+	{
+		fclose(pFile);
+	}
+}
 //打开摄像头设备
 int open_camer_device()
 {
 	int fd;
 
-	if((fd = open("/dev/video0",O_RDWR | O_NONBLOCK)) < 0)
+	if ((fd = open("/dev/video0", O_RDWR | O_NONBLOCK)) < 0)
 	// if((fd = open("/dev/video0",O_RDWR)) < 0)
 	{
 		perror("Fail to open");
 		exit(EXIT_FAILURE);
-	} 
+	}
 
 	return fd;
 }
@@ -23,57 +53,52 @@ int init_mmap(int fd)
 	int i = 0;
 	struct v4l2_requestbuffers reqbuf;
 
-	bzero(&reqbuf,sizeof(reqbuf));
+	bzero(&reqbuf, sizeof(reqbuf));
 	reqbuf.count = 4;
 	reqbuf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	reqbuf.memory = V4L2_MEMORY_MMAP;
-	
+
 	//申请视频缓冲区(这个缓冲区位于内核空间，需要通过mmap映射)
 	//这一步操作可能会修改reqbuf.count的值，修改为实际成功申请缓冲区个数
-	if(-1 == ioctl(fd,VIDIOC_REQBUFS,&reqbuf))
+	if (-1 == ioctl(fd, VIDIOC_REQBUFS, &reqbuf))
 	{
 		perror("Fail to ioctl 'VIDIOC_REQBUFS'");
 		exit(EXIT_FAILURE);
 	}
-	
+
 	n_buffer = reqbuf.count;
-	
-	printf("n_buffer = %d\n",n_buffer);
+
+	printf("n_buffer = %d\n", n_buffer);
 
 	user_buf = calloc(reqbuf.count, sizeof(*user_buf));
 	tmpbuf = calloc(1, sizeof(*tmpbuf));
 
-	if(user_buf == NULL){
-		fprintf(stderr,"Out of memory\n");
+	if (user_buf == NULL )
+	{
+		fprintf(stderr, "Out of memory\n");
 		exit(EXIT_FAILURE);
 	}
 
 	//将内核缓冲区映射到用户进程空间
-	for(i = 0; i < reqbuf.count; i ++)
+	for (i = 0; i < reqbuf.count; i++)
 	{
 		struct v4l2_buffer buf;
-		
-		bzero(&buf,sizeof(buf));
+
+		bzero(&buf, sizeof(buf));
 		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		buf.memory = V4L2_MEMORY_MMAP;
 		buf.index = i;
 		//查询申请到内核缓冲区的信息
-		if(-1 == ioctl(fd,VIDIOC_QUERYBUF,&buf))
+		if (-1 == ioctl(fd, VIDIOC_QUERYBUF, &buf))
 		{
 			perror("Fail to ioctl : VIDIOC_QUERYBUF");
 			exit(EXIT_FAILURE);
 		}
 
 		user_buf[i].length = buf.length;
-		user_buf[i].start = 
-			mmap(
-					NULL,/*start anywhere*/
-					buf.length,
-					PROT_READ | PROT_WRITE,
-					MAP_SHARED,
-					fd,buf.m.offset
-				);
-		if(MAP_FAILED == user_buf[i].start)
+		user_buf[i].start = mmap(NULL,/*start anywhere*/
+		buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, buf.m.offset);
+		if (MAP_FAILED == user_buf[i].start)
 		{
 			perror("Fail to mmap");
 			exit(EXIT_FAILURE);
@@ -81,7 +106,7 @@ int init_mmap(int fd)
 	}
 
 	tmpbuf->start = calloc(1, user_buf[1].length);
-	tmpbuf->length = user_buf[1].length;	
+	tmpbuf->length = user_buf[1].length;
 
 	return 0;
 }
@@ -93,39 +118,40 @@ int init_camer_device(int fd)
 	struct v4l2_capability cap;
 	struct v4l2_format stream_fmt;
 	int ret;
-	
+
 	//当前视频设备支持的视频格式
-	memset(&fmt,0,sizeof(fmt));
+	memset(&fmt, 0, sizeof(fmt));
 	fmt.index = 0;
 	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-	while((ret = ioctl(fd,VIDIOC_ENUM_FMT,&fmt)) == 0)
+	while ((ret = ioctl(fd, VIDIOC_ENUM_FMT, &fmt)) == 0)
 	{
-		fmt.index ++ ;
+		fmt.index++;
 
 		printf("{pixelformat = %c%c%c%c},description = '%s'\n",
-				fmt.pixelformat & 0xff,(fmt.pixelformat >> 8)&0xff,
-				(fmt.pixelformat >> 16) & 0xff,(fmt.pixelformat >> 24)&0xff,
+				fmt.pixelformat & 0xff, (fmt.pixelformat >> 8) & 0xff,
+				(fmt.pixelformat >> 16) & 0xff, (fmt.pixelformat >> 24) & 0xff,
 				fmt.description);
 	}
 
 	//查询视频设备驱动的功能
-	ret = ioctl(fd,VIDIOC_QUERYCAP,&cap);
-	if(ret < 0){
+	ret = ioctl(fd, VIDIOC_QUERYCAP, &cap);
+	if (ret < 0)
+	{
 		perror("FAIL to ioctl VIDIOC_QUERYCAP");
 		exit(EXIT_FAILURE);
 	}
 
 	//判断是否是一个视频捕捉设备
-	if(!(cap.capabilities & V4L2_BUF_TYPE_VIDEO_CAPTURE))
+	if (!(cap.capabilities & V4L2_BUF_TYPE_VIDEO_CAPTURE))
 	{
 		printf("The Current device is not a video capture device\n");
 		exit(EXIT_FAILURE);
-	
+
 	}
 
 	//判断是否支持视频流形式
-	if(!(cap.capabilities & V4L2_CAP_STREAMING))
+	if (!(cap.capabilities & V4L2_CAP_STREAMING))
 	{
 		printf("The Current device does not support streaming i/o\n");
 		exit(EXIT_FAILURE);
@@ -134,17 +160,17 @@ int init_camer_device(int fd)
 	//设置摄像头采集数据格式，如设置采集数据的
 	//长,宽，图像格式(JPEG,YUYV,MJPEG等格式)
 	stream_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	stream_fmt.fmt.pix.width = 680;
-	stream_fmt.fmt.pix.height = 480;
-	stream_fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
+	stream_fmt.fmt.pix.width = 320;
+	stream_fmt.fmt.pix.height = 240;
+	stream_fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
 	stream_fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
 
-	if(-1 == ioctl(fd,VIDIOC_S_FMT,&stream_fmt))
+	if (-1 == ioctl(fd, VIDIOC_S_FMT, &stream_fmt))
 	{
 		perror("Fail to ioctl");
 		exit(EXIT_FAILURE);
 	}
-	
+
 	//初始化视频采集方式(mmap)
 	init_mmap(fd);
 
@@ -157,16 +183,16 @@ int start_capturing(int fd)
 	enum v4l2_buf_type type;
 
 	//将申请的内核缓冲区放入一个队列中
-	for(i = 0;i < n_buffer;i ++)
+	for (i = 0; i < n_buffer; i++)
 	{
 		struct v4l2_buffer buf;
 
-		bzero(&buf,sizeof(buf));
+		bzero(&buf, sizeof(buf));
 		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		buf.memory = V4L2_MEMORY_MMAP;
 		buf.index = i;
-		
-		if(-1 == ioctl(fd,VIDIOC_QBUF,&buf))
+
+		if (-1 == ioctl(fd, VIDIOC_QBUF, &buf))
 		{
 			perror("Fail to ioctl 'VIDIOC_QBUF'");
 			exit(EXIT_FAILURE);
@@ -175,9 +201,9 @@ int start_capturing(int fd)
 
 	//开始采集数据
 	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	if(-1 == ioctl(fd,VIDIOC_STREAMON,&type))
+	if (-1 == ioctl(fd, VIDIOC_STREAMON, &type))
 	{
-		printf("i = %d.\n",i);
+		printf("i = %d.\n", i);
 		perror("Fail to ioctl 'VIDIOC_STREAMON'");
 		exit(EXIT_FAILURE);
 	}
@@ -193,18 +219,18 @@ void *process_image(void *args)
 	char picture_name[20];
 	void *addr = tmpbuf->start;
 	int length = tmpbuf->length;
-	
-	sprintf(picture_name,"picture%d.jpg",num ++);
-	
-	if((fp = fopen(picture_name,"w")) == NULL)
+
+	sprintf(picture_name, "picture%d.jpg", num++);
+
+	if ((fp = fopen(picture_name, "w")) == NULL )
 	{
 		perror("Fail to fopen");
 		exit(EXIT_FAILURE);
 	}
 
 	pthread_mutex_lock(&campture_lock);
-	pthread_cond_wait(&campture_cond, &campture_lock);	
-	fwrite(addr,length,1,fp);
+	pthread_cond_wait(&campture_cond, &campture_lock);
+	fwrite(addr, length, 1, fp);
 	//usleep(500);
 	pthread_mutex_unlock(&campture_lock);
 
@@ -219,30 +245,29 @@ int read_frame(int fd)
 	unsigned int i;
 	// int fd = *(int *)args;
 
-	bzero(&buf,sizeof(buf));
+	bzero(&buf, sizeof(buf));
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	buf.memory = V4L2_MEMORY_MMAP;
-	
+
 	// pthread_mutex_lock(&campture_lock);
 	// pthread_cond_wait(&campture_cond, &campture_lock);
 	//从队列中取缓冲区
 
-
-	if (-1 == ioctl(fd, VIDIOC_DQBUF, &buf)) 
-	{ 
-		switch (errno) 
-		{ 
-			case EAGAIN: 
-				return 0; 
-			case EIO: 
-			/* Could ignore EIO, see spec. */ 
-			/* fall through */ 
-			default: 
-				//errno_exit("VIDIOC_DQBUF");
-				perror("Fail to ioctl 'VIDIOC_DQBUF'");
-				exit(EXIT_FAILURE);
-		} 
-	}  
+	if (-1 == ioctl(fd, VIDIOC_DQBUF, &buf))
+	{
+		switch (errno)
+		{
+		case EAGAIN:
+			return 0;
+		case EIO:
+			/* Could ignore EIO, see spec. */
+			/* fall through */
+		default:
+			//errno_exit("VIDIOC_DQBUF");
+			perror("Fail to ioctl 'VIDIOC_DQBUF'");
+			exit(EXIT_FAILURE);
+		}
+	}
 	// if(-1 == ioctl(fd, VIDIOC_DQBUF, &buf))
 	// {
 	// 	perror("Fail to ioctl 'VIDIOC_DQBUF'");
@@ -252,9 +277,10 @@ int read_frame(int fd)
 	assert(buf.index < n_buffer);
 	//读取进程空间的数据到一个文件中
 
-	memcpy(tmpbuf->start, user_buf[buf.index].start, user_buf[buf.index].length);
-	
-	if(-1 == ioctl(fd,VIDIOC_QBUF,&buf))
+	memcpy(tmpbuf->start, user_buf[buf.index].start,
+			user_buf[buf.index].length);
+
+	if (-1 == ioctl(fd, VIDIOC_QBUF, &buf))
 	{
 		perror("Fail to ioctl 'VIDIOC_QBUF'");
 		exit(EXIT_FAILURE);
@@ -267,50 +293,50 @@ int read_frame(int fd)
 }
 
 void *camptureThread(void *args)
-{ 
+{
 	int count = 1;
-	int fd = *((int *)args);
+	int fd = *((int *) args);
 
 	fd_set fds;
 	struct timeval tv;
 	int r;
 
-	while(count -- > 0)
+	while (count-- > 0)
 	{
-		for(;;)
+		for (;;)
 		{
 			FD_ZERO(&fds);
-			FD_SET(fd,&fds);
+			FD_SET(fd, &fds);
 
 			/*Timeout*/
 			tv.tv_sec = 2;
 			tv.tv_usec = 0;
-		
+
 			r = select(fd + 1, &fds, NULL, NULL, &tv);
 
-			if(-1 == r)
+			if (-1 == r)
 			{
-				if(EINTR == errno)
+				if (EINTR == errno)
 					continue;
-				
+
 				perror("Fail to select");
 				//pthread_exit(1);
-				return NULL;
+				return NULL ;
 			}
 
-			if(0 == r)
+			if (0 == r)
 			{
-				fprintf(stderr,"select Timeout\n");
+				fprintf(stderr, "select Timeout\n");
 				pthread_mutex_lock(&campture_lock);
-				pthread_cond_signal(&campture_cond);	
+				pthread_cond_signal(&campture_cond);
 				pthread_mutex_unlock(&campture_lock);
-				return NULL;
+				return NULL ;
 			}
 
-			if(!read_frame(fd))
+			if (!read_frame(fd))
 			{
 				pthread_mutex_lock(&campture_lock);
-				pthread_cond_signal(&campture_cond);	
+				pthread_cond_signal(&campture_cond);
 				pthread_mutex_unlock(&campture_lock);
 				break;
 			}
@@ -318,36 +344,35 @@ void *camptureThread(void *args)
 		}
 	}
 
-
-	pthread_exit(0);//return 0;
+	pthread_exit(0);	//return 0;
 }
 
 void stop_capturing(int fd)
 {
 	enum v4l2_buf_type type;
-	
+
 	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	if(-1 == ioctl(fd,VIDIOC_STREAMOFF,&type))
+	if (-1 == ioctl(fd, VIDIOC_STREAMOFF, &type))
 	{
 		perror("Fail to ioctl 'VIDIOC_STREAMOFF'\n");
 		exit(EXIT_FAILURE);
-	}//stream off
-	
+	}	//stream off
+
 	unsigned int i;
 
-	for(i = 0;i < n_buffer;i ++)
+	for (i = 0; i < n_buffer; i++)
 	{
-		if(-1 == munmap(user_buf[i].start,user_buf[i].length))
+		if (-1 == munmap(user_buf[i].start, user_buf[i].length))
 		{
 			exit(EXIT_FAILURE);
 		}
-	}//cancle the mmap
-	
+	}	//cancle the mmap
+
 	free(user_buf);
 	free(tmpbuf->start);
 	free(tmpbuf);
 
-	if(-1 == close(fd))
+	if (-1 == close(fd))
 	{
 		perror("Fail to close fd");
 		exit(EXIT_FAILURE);
@@ -363,28 +388,28 @@ int captureInit()
 	fd = open_camer_device();
 
 	init_camer_device(fd);
-	
+
 	start_capturing(fd);
 
 	return fd;
 }
 
-// int main()
-// {
-// 	int fd;       
-// 	pthread_t threadCampture, threadReadFrame;
-// 	void *camptureRtn, *readFrameRtn;
-                         
-// 	fd = captureInit();
-	
-// 	pthread_create(&threadCampture, NULL, camptureThread, (void *)&fd);
-// 	pthread_create(&threadReadFrame, NULL, process_image, NULL);
-	
-// 	pthread_join(threadCampture, &camptureRtn);
-// 	pthread_join(threadReadFrame, &readFrameRtn);
+int main()
+{
+	int fd;
+	pthread_t threadCampture, threadReadFrame;
+	void *camptureRtn, *readFrameRtn;
 
-// 	stop_capturing(fd);
+	fd = captureInit();
 
-// 	return 0;
-// }
+	pthread_create(&threadCampture, NULL, camptureThread, (void *) &fd);
+	pthread_create(&threadReadFrame, NULL, process_image, NULL );
+
+	pthread_join(threadCampture, &camptureRtn);
+	pthread_join(threadReadFrame, &readFrameRtn);
+
+	stop_capturing(fd);
+
+	return 0;
+}
 
